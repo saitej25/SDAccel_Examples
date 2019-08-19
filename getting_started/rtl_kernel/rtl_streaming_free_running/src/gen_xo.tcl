@@ -40,11 +40,6 @@ if { $::argc != 2 } {
 set xpfm_path    [lindex $::argv 0]
 set xo_pathname  [lindex $::argv 1]
 
-set pinfo [file join [pwd] "pinfo.json"]
-if {[file exists ${xpfm_path}]} {
-    exec $::env(XILINX_SDX)/bin/platforminfo -j $pinfo -p ${xpfm_path}
-}
-
 if {[file exists "myadder1_ex"]} {
     file delete -force "myadder1_ex"
 }
@@ -52,33 +47,6 @@ if {[file exists "project_1"]} {
     file delete -force "project_1"
 }
 
-if {![file exists $pinfo]} {
-    puts "ERROR: $pinfo does not exist!"
-}
-
-set fid [open $pinfo r]
-set fpgapart "fpgaPart"
-while { ! [eof $fid] } {
-    gets $fid line
-    if { [regexp {([^:[:space:]]+): (.*),$} $line match left right] } {
-	regsub -all {\"} $left {} left
-	regsub -all {\"} $right {} right
-	if { $left eq $fpgapart } {
-	    if { [string match {*:*} $right] } {
-                set fields [split $right ":"]
-	        set f0 [lindex $fields 0]
-	        set f1 [lindex $fields 1]
-	        set f2 [lindex $fields 2]
-	        set f3 [lindex $fields 3]
-	        set f4 [lindex $fields 4]
-	        set partname "${f1}-${f2}${f3}-${f4}"
- 	        puts "partname = $partname\n"
-	        break
-	    }
-        }
-    }
-}
-close $fid
 create_project project_1 project_1 -part $partname
 create_ip -name sdx_kernel_wizard -vendor xilinx.com -library ip -version 1.0 -module_name myadder1
 
